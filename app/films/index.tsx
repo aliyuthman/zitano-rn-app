@@ -1,7 +1,9 @@
+import FilmItem from "@/components/FilmItem";
+import ListEmptyComponent from "@/components/ListEmpty";
 import { colors } from "@/constants/color";
 import { Film } from "@/types/interfaces";
 import React, { useEffect, useState } from "react";
-import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 
 const Films = () => {
   const [films, setFilms] = useState<Film[]>([]);
@@ -30,14 +32,8 @@ const Films = () => {
 
   const renderItem = ({ item }: { item: Film }) => {
     console.log(item);
-    return (
-      <View style={styles.item}>
-        <Text style={styles.title}>{item.title}</Text>
-      </View>
-    );
+    return <FilmItem item={item} />;
   };
-
-  console.log("Films array:", films, "Length:", films.length);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -46,8 +42,6 @@ const Films = () => {
 
   return (
     <View style={styles.container}>
-      {loading && <Text>Loading films...</Text>}
-      {!loading && films.length === 0 && <Text>No films found</Text>}
       <FlatList
         data={films}
         renderItem={renderItem}
@@ -59,9 +53,9 @@ const Films = () => {
             tintColor={colors.text}
           />
         }
-        ListEmptyComponent={
-          <Text style={styles.empty}>No films found</Text>
-        }
+        ListEmptyComponent={<ListEmptyComponent loading={loading} />}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -72,27 +66,9 @@ export default Films;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: colors.containerBackground,
   },
-  item: {
-    backgroundColor: colors.text,
-    padding: 10,
-    marginVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.text,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.containerBackground,
-  },
-  empty: {
-    fontSize: 20,
-    color: colors.text,
-    textAlign: "center",
-    marginTop: 20,
+  listContainer: {
+    paddingVertical: 8,
   },
 });

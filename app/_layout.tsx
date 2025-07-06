@@ -42,12 +42,14 @@ export default function RootLayout() {
 
       <Tabs.Screen
         name="films"
+    
         options={{
           title: "All Movies",
           tabBarLabel: "Films",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="film" color={color} size={size} />
           ),
+          headerShown: false,
         }}
       />
 
