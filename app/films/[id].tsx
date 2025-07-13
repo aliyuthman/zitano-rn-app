@@ -1,9 +1,20 @@
 import { Film } from "@/types/interfaces";
-import { useLocalSearchParams } from "expo-router";
+import Ionicons from "@expo/vector-icons/build/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Stack, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
+
+const FAVORITE_KEY = "favorites";
 
 const FilmDetails = () => {
   const { id } = useLocalSearchParams();
@@ -11,6 +22,7 @@ const FilmDetails = () => {
   const [film, setFilm] = useState<Film | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     const fetchFilm = async () => {
@@ -18,6 +30,7 @@ const FilmDetails = () => {
         const response = await fetch(`https://swapi.info/api/films/${id}`);
         const data = await response.json();
         setFilm(data);
+        checkFavoriteStatus(data.episode_id);
         setLoading(false);
       } catch (error) {
         setError(error as string);
@@ -26,6 +39,48 @@ const FilmDetails = () => {
     };
     fetchFilm();
   }, [id]);
+
+  const checkFavoriteStatus = async (filmId: number) => {
+    try {
+      const favorites = await AsyncStorage.getItem(FAVORITE_KEY);
+      if (favorites) {
+        const favoritesArray = JSON.parse(favorites) as Film[];
+        const isFavorite = favoritesArray.some(
+          (film) => film.episode_id === filmId
+        );
+        setIsFavorite(isFavorite);
+      }
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+      setIsFavorite(false);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    if (!film) return;
+
+    try {
+      const favorites = await AsyncStorage.getItem(FAVORITE_KEY);
+
+    let favoriteFilms = favorites ? JSON.parse(favorites) as Film[] : [];
+
+    if (isFavorite) {
+      favoriteFilms = favoriteFilms.filter(
+        (film: Film) => film.episode_id !== film.episode_id
+      );
+    } else {
+      favoriteFilms.push(film as unknown as Film);
+    }
+
+      await AsyncStorage.setItem(
+        FAVORITE_KEY,
+        JSON.stringify(favoriteFilms)
+      );
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -54,6 +109,19 @@ const FilmDetails = () => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <TouchableOpacity onPress={toggleFavorite}>
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={24}
+                color={isFavorite ? "#FFD700" : "#FFD700"}
+              />
+            </TouchableOpacity>
+          ),
+        }}
+      />
       {/* Header Section */}
       <View style={styles.header}>
         <View style={styles.titleContainer}>
